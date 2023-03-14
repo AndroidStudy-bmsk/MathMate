@@ -1,7 +1,6 @@
 package org.bmsk.mathmate
 
 import org.junit.Test
-
 import org.junit.Assert.*
 
 /**
