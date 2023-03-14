@@ -3,66 +3,57 @@ package org.bmsk.mathmate.ui.component.calc
 import java.util.*
 
 class Calculator {
-    private val precedence = mapOf('+' to 1, '-' to 1, '*' to 2, '/' to 2, '%' to 2)
+    fun calculate(expression: String): Int {
+        val numbers = Stack<Int>()
+        val operators = Stack<Char>()
+        val precedence = mapOf('+' to 1, '-' to 1, '*' to 2, '/' to 2)
 
-    fun calculate(expression: String): Double {
-        val postfixExpression = convertInfixToPostfix(expression.replace(" ",""))
-        return evaluatePostfixExpression(postfixExpression)
-    }
-
-    private fun convertInfixToPostfix(infixExpression: String): String {
-        val postfixExpression = StringBuilder()
-        val operatorStack = Stack<Char>()
-
-        infixExpression.forEach { char ->
+        var i = 0
+        while (i < expression.length) {
+            val ch = expression[i]
             when {
-                char.isDigit() -> postfixExpression.append(char)
-                char == '(' -> operatorStack.push(char)
-                char == ')' -> {
-                    while (operatorStack.peek() != '(') {
-                        postfixExpression.append(operatorStack.pop())
+                ch.isDigit() -> {
+                    var num = ch.toString()
+                    while (i + 1 < expression.length && expression[i + 1].isDigit()) {
+                        num += expression[i + 1]
+                        i++
                     }
-                    operatorStack.pop()
+                    numbers.push(num.toInt())
                 }
-                else -> {
-                    while (operatorStack.isNotEmpty() && operatorStack.peek() != '(' && precedence[char]!! <= precedence[operatorStack.peek()]!!) {
-                        postfixExpression.append(operatorStack.pop())
+                ch == '(' -> operators.push(ch)
+                ch == ')' -> {
+                    while (operators.peek() != '(') {
+                        val result = applyOperation(operators.pop(), numbers.pop(), numbers.pop())
+                        numbers.push(result)
                     }
-                    operatorStack.push(char)
+                    operators.pop()
+                }
+                ch in precedence.keys -> {
+                    while (!operators.empty() && operators.peek() != '(' && precedence[operators.peek()]!! >= precedence[ch]!!) {
+                        val result = applyOperation(operators.pop(), numbers.pop(), numbers.pop())
+                        numbers.push(result)
+                    }
+                    operators.push(ch)
                 }
             }
+            i++
         }
 
-        while (operatorStack.isNotEmpty()) {
-            postfixExpression.append(operatorStack.pop())
+        while (!operators.empty()) {
+            val result = applyOperation(operators.pop(), numbers.pop(), numbers.pop())
+            numbers.push(result)
         }
 
-        return postfixExpression.toString()
+        return numbers.pop()
     }
 
-    private fun evaluatePostfixExpression(postfixExpression: String): Double {
-        val valueStack = Stack<Double>()
-
-        postfixExpression.forEach { char ->
-            when {
-                char.isDigit() -> valueStack.push(char.toString().toDouble())
-                char in setOf('+', '-', '*', '/', '%') -> {
-                    val operand2 = valueStack.pop()
-                    val operand1 = valueStack.pop()
-                    val result = when (char) {
-                        '+' -> operand1 + operand2
-                        '-' -> operand1 - operand2
-                        '*' -> operand1 * operand2
-                        '/' -> operand1 / operand2
-                        '%' -> operand1 % operand2
-                        else -> throw IllegalArgumentException("Invalid operator: $char")
-                    }
-                    valueStack.push(result)
-                }
-                else -> throw IllegalArgumentException("Invalid character in expression: $char")
-            }
+    private fun applyOperation(operator: Char, b: Int, a: Int): Int {
+        when (operator) {
+            '+' -> return a + b
+            '-' -> return a - b
+            '*' -> return a * b
+            '/' -> return a / b
         }
-
-        return valueStack.pop()
+        return 0
     }
 }
