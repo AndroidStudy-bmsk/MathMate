@@ -31,7 +31,8 @@ class CalcActivity : BaseActivity<ActivityCalcBinding>() {
         firstNumberText.clear()
         secondNumberText.clear()
         operatorText.clear()
-        updateEquationTextView()
+
+        binding.tvResult.text = ""
     }
 
     fun onClickEqual(view: View) {
